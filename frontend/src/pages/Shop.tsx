@@ -102,7 +102,7 @@ export default function Shop() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
-      <h1>🛒 Demo Shop (Float Bug)</h1>
+      <h1>Demo Shop (Float Bug)</h1>
       <p style={{ color: '#666', marginBottom: '30px' }}>
         This shop has a rounding bug in cart calculations. Add items and calculate total to see the issue!
       </p>
@@ -234,7 +234,7 @@ export default function Shop() {
                   borderRadius: '4px'
                 }}>
                   <p style={{ margin: 0, fontWeight: 'bold', color: '#92400e' }}>
-                    ⚠️ Rounding Bug Detected!
+                    WARNING: Rounding Bug Detected!
                   </p>
                   <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#92400e' }}>
                     Backend uses float arithmetic. Expected total: ${getExpectedTotal()}, Got: ${cartTotal.total.toFixed(2)}
@@ -249,22 +249,6 @@ export default function Shop() {
         )}
       </div>
 
-      {/* Navigation */}
-      <div style={{ marginTop: '30px', textAlign: 'center' }}>
-        <a
-          href="/"
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#6366f1',
-            color: 'white',
-            textDecoration: 'none',
-            borderRadius: '4px',
-            display: 'inline-block'
-          }}
-        >
-          ← Back to Issue Tracker
-        </a>
-      </div>
     </div>
   );
 }
