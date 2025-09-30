@@ -1,1 +1,5 @@
-// placeholder for Dashboard.tsx
+import Board from '../components/Board'
+
+export default function Dashboard() {
+  return <Board />
+}
