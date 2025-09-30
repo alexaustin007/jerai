@@ -34,110 +34,21 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>('all');
 
-  // Mock clothing products data (UI-only, no backend needed)
-  const mockProducts: Product[] = [
-    {
-      id: 1,
-      name: "Classic Cotton Shirt",
-      price: 29.99,
-      description: "100% organic cotton, available in multiple colors",
-      category: "shirts",
-      image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop"
-    },
-    {
-      id: 2,
-      name: "Denim Casual Shirt",
-      price: 39.99,
-      description: "Premium denim with comfortable fit",
-      category: "shirts",
-      image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=300&h=300&fit=crop"
-    },
-    {
-      id: 3,
-      name: "Business Dress Shirt",
-      price: 49.99,
-      description: "Professional dress shirt for office wear",
-      category: "shirts",
-      image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&h=300&fit=crop"
-    },
-    {
-      id: 4,
-      name: "Leather Work Boots",
-      price: 89.99,
-      description: "Durable leather boots for all-day comfort",
-      category: "boots",
-      image: "https://images.unsplash.com/photo-1553699357-b454793abefa?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-    },
-    {
-      id: 5,
-      name: "Hiking Boots",
-      price: 79.99,
-      description: "Waterproof hiking boots with ankle support",
-      category: "boots",
-      image: "https://images.unsplash.com/photo-1605348532760-6753d2c43329?w=300&h=300&fit=crop"
-    },
-    {
-      id: 6,
-      name: "Chelsea Boots",
-      price: 99.99,
-      description: "Stylish Chelsea boots for casual and formal wear",
-      category: "boots",
-      image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop"
-    },
-    {
-      id: 7,
-      name: "Wool Socks",
-      price: 12.99,
-      description: "Merino wool socks, pack of 3",
-      category: "socks",
-      image: "https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=300&h=300&fit=crop"
-    },
-    {
-      id: 8,
-      name: "Athletic Socks",
-      price: 8.99,
-      description: "Moisture-wicking athletic socks, pack of 5",
-      category: "socks",
-      image: "https://images.unsplash.com/photo-1733409896722-56913a549739?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmxhY2slMjBzb2Nrc3xlbnwwfHwwfHx8MA%3D%3D"
-    },
-    {
-      id: 9,
-      name: "Dress Socks",
-      price: 15.99,
-      description: "Premium dress socks for business attire",
-      category: "socks",
-      image: "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=300&h=300&fit=crop"
-    },
-    {
-      id: 10,
-      name: "Designer Jeans",
-      price: 59.99,
-      description: "Premium denim jeans with perfect fit",
-      category: "clothes",
-      image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop"
-    },
-    {
-      id: 11,
-      name: "Cozy Sweater",
-      price: 49.99,
-      description: "Soft knit sweater for cold weather",
-      category: "clothes",
-      image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300&h=300&fit=crop"
-    },
-    {
-      id: 12,
-      name: "Leather Jacket",
-      price: 149.99,
-      description: "Genuine leather jacket with classic styling",
-      category: "clothes",
-      image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop"
-    }
-  ];
-
-  // Initialize products on component mount
+  // Initialize products from backend API
   useEffect(() => {
-    setProducts(mockProducts);
-    setFilteredProducts(mockProducts);
+    fetch(`${API_BASE}/api/shop/products`)
+      .then(res => res.json())
+      .then(data => {
+        console.log('✅ Loaded products from backend:', data.products.length);
+        setProducts(data.products);
+        setFilteredProducts(data.products);
+      })
+      .catch(err => {
+        console.error('❌ Failed to load products from backend:', err);
+        // You could add fallback mock data here if needed
+        setProducts([]);
+        setFilteredProducts([]);
+      });
   }, []);
 
   // Category filter functionality
@@ -182,44 +93,55 @@ export default function App() {
     ));
   };
 
-  // Simulate the buggy cart calculation (frontend-only)
-  const simulateBuggyCalculation = (items: CartItem[], discount: number, tax: number) => {
-    // This simulates the same float precision bug that would be in the backend!
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-    
-    // Apply discount (float arithmetic causes precision issues)
-    const discountAmount = subtotal * discount;
-    const afterDiscount = subtotal - discountAmount;
-    
-    // Apply tax (more float arithmetic)
-    const taxAmount = afterDiscount * tax;
-    const total = afterDiscount + taxAmount;
-    
-    // This is where the rounding bug occurs - float precision is already lost!
-    return {
-      subtotal: subtotal,
-      discount_pct: discount,
-      tax_pct: tax,
-      total: Math.round(total * 100) / 100, // Buggy rounding due to float precision
-      items_count: items.reduce((sum, item) => sum + item.qty, 0)
-    };
-  };
-
-  // Calculate total with discount and tax (frontend simulation)
-  const calculateTotal = () => {
+  // Calculate total with discount and tax (backend API call)
+  const calculateTotal = async () => {
     if (cart.length === 0) {
       alert('Cart is empty!');
       return;
     }
 
     setLoading(true);
-    
-    // Simulate loading delay for realistic UX
-    setTimeout(() => {
-      const result = simulateBuggyCalculation(cart, 0.10, 0.08875);
-      setCartTotal(result);
+    try {
+      const response = await fetch(`${API_BASE}/api/shop/cart/calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart,
+          discount: 0.10,
+          tax: 0.08875
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Cart calculation from backend:', data);
+        setCartTotal(data);
+      } else {
+        throw new Error(`Backend error: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('❌ Failed to calculate total from backend:', err);
+      
+      // Fallback to local calculation if backend is down
+      const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const discountAmount = subtotal * 0.10;
+      const afterDiscount = subtotal - discountAmount;
+      const taxAmount = afterDiscount * 0.08875;
+      const total = afterDiscount + taxAmount;
+      
+      const fallbackResult = {
+        subtotal: subtotal,
+        discount_pct: 0.10,
+        tax_pct: 0.08875,
+        total: Math.round(total * 100) / 100,
+        items_count: cart.reduce((sum, item) => sum + item.qty, 0)
+      };
+      
+      setCartTotal(fallbackResult);
+      alert('Backend unavailable, using fallback calculation');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   // Clear cart
@@ -385,23 +307,6 @@ export default function App() {
                   <div className="total-row final">
                     <span>Total:</span>
                     <span>${cartTotal.total.toFixed(2)}</span>
-                  </div>
-
-                  {/* Bug Warning */}
-                  <div className="bug-warning">
-                    <p className="warning-title">⚠️ ROUNDING BUG DETECTED!</p>
-                    <p className="warning-text">
-                      <strong>Expected (correct math):</strong> ${getExpectedTotal()}
-                    </p>
-                    <p className="warning-text">
-                      <strong>Actual (buggy float):</strong> ${cartTotal.total.toFixed(2)}
-                    </p>
-                    <p className="warning-text">
-                      <strong>Difference:</strong> ${Math.abs(parseFloat(getExpectedTotal()) - cartTotal.total).toFixed(2)}
-                    </p>
-                    <p className="warning-hint">
-                      🐛 This is a float arithmetic precision bug! The AI system should detect and fix this using Decimal arithmetic.
-                    </p>
                   </div>
                 </div>
               )}
