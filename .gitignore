@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Node / Frontend
+node_modules/
+dist/
+.cache/
+
+# Build artifacts
+*.pyc
+
+# Removed for minimal MVP (no file artifacts)
+artifacts/
+
+# Documentation (internal only)
+CLAUDE.md
+IMPLEMENTATION.md
