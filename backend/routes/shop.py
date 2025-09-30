@@ -4,15 +4,15 @@ Exposes the buggy cart calculation that AI will fix.
 """
 
 from flask import Blueprint, jsonify, request
-from ecommerce.cart import Cart, PRODUCTS, get_product_by_id
+from ecommerce.cart import Cart, CLOTHING_PRODUCTS, get_product_by_id, get_all_products
 
 shop_bp = Blueprint('shop', __name__)
 
 
 @shop_bp.route('/products', methods=['GET'])
 def get_products():
-    """Get all available products"""
-    return jsonify({"products": PRODUCTS})
+    """Get all available clothing products"""
+    return jsonify({"products": get_all_products()})
 
 
 @shop_bp.route('/products/<int:product_id>', methods=['GET'])
@@ -50,17 +50,14 @@ def calculate_cart():
             cart.add_item(price=item['price'], qty=item.get('qty', 1))
 
         # This calculation has the float bug!
-        total = cart.calculate_total(discount_pct=discount, tax_pct=tax)
-
-        # Calculate subtotal for display
-        subtotal = sum(item['price'] * item.get('qty', 1) for item in items)
+        result = cart.calculate_total(discount_pct=discount, tax_pct=tax)
 
         return jsonify({
-            "subtotal": round(subtotal, 2),
-            "discount_pct": discount * 100,
-            "tax_pct": tax * 100,
-            "total": total,
-            "items_count": len(items)
+            "subtotal": result["subtotal"],
+            "discount_pct": result["discount_pct"],
+            "tax_pct": result["tax_pct"],
+            "total": result["total"],
+            "items_count": result["items_count"]
         })
 
     except Exception as e:

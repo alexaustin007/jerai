@@ -7,10 +7,11 @@
 .header {
   text-align: center;
   padding: 40px 20px;
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #8b5a3c 0%, #6b4423 100%);
   color: white;
   border-radius: 8px;
   margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.3);
 }
 
 .header h1 {
@@ -31,67 +32,148 @@
 .products-section h2 {
   margin-bottom: 20px;
   font-size: 1.8rem;
+  color: #8b5a3c;
+}
+
+/* Category Filters */
+.category-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.filter-btn:hover {
+  border-color: #8b5a3c;
+  background: #fef7f0;
+}
+
+.filter-btn.active {
+  background: #8b5a3c;
+  color: white;
+  border-color: #8b5a3c;
 }
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 .product-card {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 20px;
-  transition: all 0.2s;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .product-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  transform: translateY(-4px);
 }
 
-.product-card h3 {
+.product-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
+.category-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(139, 90, 60, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.product-info {
+  padding: 20px;
+}
+
+.product-info h3 {
   font-size: 1.2rem;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  color: #1f2937;
 }
 
-.product-card .description {
+.product-info .description {
   font-size: 0.9rem;
   color: #6b7280;
   margin-bottom: 15px;
+  line-height: 1.4;
 }
 
-.product-card .price {
-  font-size: 1.5rem;
+.product-info .price {
+  font-size: 1.4rem;
   font-weight: bold;
-  color: #2563eb;
+  color: #8b5a3c;
   margin-bottom: 15px;
 }
 
 .btn-add {
   width: 100%;
-  padding: 10px;
-  background: #2563eb;
+  padding: 12px;
+  background: #8b5a3c;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
-  transition: background 0.2s;
+  font-weight: 600;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.btn-add:hover {
-  background: #1d4ed8;
+.btn-add:hover:not(:disabled) {
+  background: #6b4423;
+  transform: translateY(-1px);
+}
+
+.btn-add:disabled {
+  background: #16a34a;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.8;
 }
 
 /* Cart */
 .cart-section {
   background: white;
-  border: 2px solid #2563eb;
-  border-radius: 8px;
-  padding: 20px;
+  border: 2px solid #8b5a3c;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(139, 90, 60, 0.1);
 }
 
 .cart-header {
@@ -132,8 +214,95 @@
 .cart-item {
   display: flex;
   justify-content: space-between;
-  padding: 12px 0;
+  align-items: center;
+  padding: 16px 0;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.item-name {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.item-price {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #8b5a3c;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.qty-btn:hover {
+  background: #6b4423;
+}
+
+.quantity {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+  color: #374151;
+}
+
+.item-total {
+  font-weight: 600;
+  color: #8b5a3c;
+  min-width: 80px;
+  text-align: right;
+}
+
+.remove-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #dc2626;
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.remove-btn:hover {
+  background: #b91c1c;
 }
 
 .btn-calculate {
@@ -190,28 +359,42 @@
 
 .bug-warning {
   margin-top: 20px;
-  padding: 15px;
-  background: #fef3c7;
+  padding: 18px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border: 2px solid #f59e0b;
-  border-radius: 4px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
 }
 
 .warning-title {
   font-weight: bold;
   color: #92400e;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .warning-text {
   font-size: 0.95rem;
   color: #92400e;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.warning-text strong {
+  color: #78350f;
 }
 
 .warning-hint {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #92400e;
   font-style: italic;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f59e0b;
+  line-height: 1.4;
 }
 
 /* Footer */
@@ -221,4 +404,11 @@
   margin-top: 40px;
   color: #6b7280;
   border-top: 1px solid #e5e7eb;
+}
+
+.bug-notice {
+  font-size: 0.85rem;
+  color: #d97706;
+  margin-top: 5px;
+  font-style: italic;
 }
