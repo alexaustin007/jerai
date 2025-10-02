@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "jerai-bug-fixer": {
+      "command": "python",
+      "args": ["/app/agent.py"],
+      "env": {
+        "WORKSPACE_PATH": "/workspace",
+        "CEREBRAS_API_KEY": "${CEREBRAS_API_KEY}",
+        "CEREBRAS_API_URL": "${CEREBRAS_API_URL}"
+      }
+    }
+  }
+}

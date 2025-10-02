@@ -6,9 +6,10 @@ import { transition, aiFix, type Issue } from '../api/issues';
 interface Props {
   issue: Issue;
   onUpdate: () => void;
+  onShowEvents?: () => void;
 }
 
-export default function IssueCard({ issue, onUpdate }: Props) {
+export default function IssueCard({ issue, onUpdate, onShowEvents }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,9 +77,9 @@ export default function IssueCard({ issue, onUpdate }: Props) {
           </button>
         )}
 
-        <a href={`#/issues/${issue.id}/events`} className="btn-link">
+        <button onClick={onShowEvents} className="btn-link">
           Events
-        </a>
+        </button>
       </div>
 
       {error && <div className="error-message">{error}</div>}

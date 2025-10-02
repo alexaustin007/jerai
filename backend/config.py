@@ -1,19 +1,26 @@
-"""
-Configuration settings for the Flask application
-"""
-
 import os
+from dotenv import load_dotenv
+from urllib.parse import quote_plus
+
+load_dotenv()
+
 
 class Config:
-    """Base configuration"""
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    
-    # Database configuration (not needed for this simple demo)
-    # DATABASE_URL = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
-    
-    # API configuration
-    CEREBRAS_API_KEY = os.environ.get('CEREBRAS_API_KEY')
-    CEREBRAS_API_URL = os.environ.get('CEREBRAS_API_URL') or 'https://api.cerebras.ai/v1/chat/completions'
-    
-    # MCP Gateway
-    MCP_GATEWAY_URL = os.environ.get('MCP_GATEWAY_URL') or 'http://mcp-gateway:3000'
+    """Application configuration"""
+
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+    # Build DATABASE_URL with proper URL encoding for password
+    db_user = os.getenv('MYSQL_USER', 'jerai')
+    db_password = os.getenv('MYSQL_PASSWORD', 'Alex@12345')
+    db_host = 'mysql'
+    db_name = os.getenv('MYSQL_DATABASE', 'jerai')
+
+    SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{db_user}:{quote_plus(db_password)}@{db_host}:3306/{db_name}'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ECHO = os.getenv('FLASK_ENV') == 'development'
+
+    CEREBRAS_API_KEY = os.getenv('CEREBRAS_API_KEY')
+    CEREBRAS_API_URL = os.getenv('CEREBRAS_API_URL', 'https://api.cerebras.ai/v1/chat/completions')
+
+    MCP_GATEWAY_URL = os.getenv('MCP_GATEWAY_URL', 'http://localhost:3000')

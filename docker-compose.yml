@@ -1,1 +1,81 @@
-// placeholder for docker-compose.yml
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: jerai-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jerai-backend
+    environment:
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      CEREBRAS_API_KEY: ${CEREBRAS_API_KEY}
+      CEREBRAS_API_URL: ${CEREBRAS_API_URL}
+      MCP_GATEWAY_URL: http://mcp_agent:9000
+      MCP_SERVER_SCRIPT: /app/mcp_agent/agent.py
+      WORKSPACE_PATH: /workspace
+      FLASK_ENV: ${FLASK_ENV}
+      SECRET_KEY: ${SECRET_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mcp_agent:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+      - ./mcp_agent:/app/mcp_agent:ro
+      - ./backend:/workspace/backend:ro
+      - ./frontend:/workspace/frontend:ro
+      - ./ecommerce-app:/workspace/ecommerce-app:ro
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jerai-frontend
+    environment:
+      VITE_API_BASE: ${VITE_API_BASE}
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  mcp_agent:
+    build:
+      context: ./mcp_agent
+      dockerfile: Dockerfile
+    container_name: jerai-mcp-agent
+    environment:
+      WORKSPACE_PATH: /workspace
+      CEREBRAS_API_KEY: ${CEREBRAS_API_KEY}
+      CEREBRAS_API_URL: ${CEREBRAS_API_URL}
+      FLASK_ENV: production
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./backend:/workspace/backend:ro
+      - ./frontend:/workspace/frontend:ro
+      - ./ecommerce-app:/workspace/ecommerce-app:ro
+
+volumes:
+  mysql_data:

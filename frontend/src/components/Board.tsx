@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { getIssues, createIssue, type Issue } from '../api/issues';
 import IssueCard from './IssueCard';
+import EventTrail from './EventTrail';
 
 export default function Board() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newIssueTitle, setNewIssueTitle] = useState('');
+  const [selectedIssueId, setSelectedIssueId] = useState<number | null>(null);
 
   useEffect(() => {
     loadIssues();
@@ -46,6 +48,16 @@ export default function Board() {
     { state: 'Resolved', color: '#27ae60', icon: 'DONE' },
     { state: 'Closed', color: '#34495e', icon: 'CLOSED' }
   ];
+
+  // Show event trail if an issue is selected
+  if (selectedIssueId !== null) {
+    return (
+      <EventTrail
+        issueId={selectedIssueId}
+        onBack={() => setSelectedIssueId(null)}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -111,6 +123,7 @@ export default function Board() {
                       key={issue.id}
                       issue={issue}
                       onUpdate={loadIssues}
+                      onShowEvents={() => setSelectedIssueId(issue.id)}
                     />
                   ))
                 )}

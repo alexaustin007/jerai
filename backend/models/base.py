@@ -1,10 +1,10 @@
-"""
-Database base configuration (minimal for this demo)
-"""
+from flask_sqlalchemy import SQLAlchemy
 
-# For this simple demo, we don't need a database
-# The shop API uses in-memory data structures
+db = SQLAlchemy()
+
 
 def init_db(app):
-    """Initialize database (placeholder for future use)"""
-    pass
+    """Initialize database with app context"""
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
