@@ -16,11 +16,11 @@ def analyze_bug_with_cerebras(title: str, description: str = "") -> dict:
     Step 1: Fast bug analysis using MCP server (Cerebras API via Docker MCP Gateway)
     Returns likely cause, affected files, and suggested approach
     """
-    from services.mcp_client import get_mcp_client
+    from services.mcp_http_client import get_mcp_http_client
 
     try:
-        # Call analyze_bug tool via MCP
-        mcp_client = get_mcp_client()
+        # Call analyze_bug tool via MCP HTTP
+        mcp_client = get_mcp_http_client()
         analysis_text = mcp_client.call_tool(
             "analyze_bug",
             {
@@ -73,11 +73,11 @@ def generate_patch_with_llama(title: str, analysis: dict) -> dict:
     Step 2: Generate code patch using Llama via Docker MCP Gateway
     Calls MCP server via stdio protocol
     """
-    from services.mcp_client import get_mcp_client
+    from services.mcp_http_client import get_mcp_http_client
 
     try:
-        # Call generate_patch tool via MCP
-        mcp_client = get_mcp_client()
+        # Call generate_patch tool via MCP HTTP
+        mcp_client = get_mcp_http_client()
         patch_text = mcp_client.call_tool(
             "generate_patch",
             {
