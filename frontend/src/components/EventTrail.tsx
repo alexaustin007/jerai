@@ -37,8 +37,11 @@ export default function EventTrail({ issueId, onBack }: Props) {
   }
 
   function parseContent(rawContent: string): string {
+    if (!rawContent) return '';
+
     try {
-      const parsed = JSON.parse(rawContent);
+      const jsonString = rawContent.replace(/'/g, '"').replace(/False/g, 'false').replace(/True/g, 'true');
+      const parsed = JSON.parse(jsonString);
       if (parsed.content && Array.isArray(parsed.content)) {
         return parsed.content
           .map((item: any) => item.text || '')
@@ -47,34 +50,71 @@ export default function EventTrail({ issueId, onBack }: Props) {
       }
       return rawContent;
     } catch {
+      const contentMatch = rawContent.match(/'text':\s*'([^']+(?:''[^']+)*)'/);
+      if (contentMatch) {
+        return contentMatch[1]
+          .replace(/''/g, "'")
+          .replace(/\\n/g, '\n')
+          .trim();
+      }
+
+      const textPattern = /"text":\s*"([^"\\]*(?:\\.[^"\\]*)*)"/g;
+      const matches = [...rawContent.matchAll(textPattern)];
+      if (matches.length > 0) {
+        return matches
+          .map(m => m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'))
+          .join('\n\n')
+          .trim();
+      }
+
       return rawContent;
     }
   }
 
   function formatAnalysis(rawAnalysis: string) {
     const cleanedText = parseContent(rawAnalysis);
-    const lines = cleanedText.split('\n').filter(line => line.trim());
+    const lines = cleanedText.split('\n').map(line => line.trim()).filter(line => line);
 
     const sections: { title: string; content: string[] }[] = [];
     let currentSection: { title: string; content: string[] } | null = null;
 
     lines.forEach(line => {
-      const trimmed = line.trim();
-      if (trimmed.match(/^(ROOT CAUSE|LIKELY CAUSE|AFFECTED FILES|SUGGESTED APPROACH|FIX|SOLUTION):/i)) {
-        if (currentSection) sections.push(currentSection);
-        currentSection = { title: trimmed, content: [] };
+      const sectionMatch = line.match(/^(ROOT CAUSE|LIKELY CAUSE|AFFECTED FILES|SUGGESTED APPROACH|FIX APPROACH|FIX|SOLUTION|ANALYSIS|RECOMMENDATION):\s*(.*)$/i);
+
+      if (sectionMatch) {
+        if (currentSection && currentSection.content.length > 0) {
+          sections.push(currentSection);
+        }
+        currentSection = {
+          title: sectionMatch[1].toUpperCase(),
+          content: sectionMatch[2] ? [sectionMatch[2]] : []
+        };
       } else if (currentSection) {
-        currentSection.content.push(trimmed);
+        currentSection.content.push(line);
       } else {
-        if (!sections.length || sections[sections.length - 1].title !== 'Overview') {
-          sections.push({ title: 'Overview', content: [trimmed] });
+        if (!sections.length || sections[sections.length - 1].title !== 'OVERVIEW') {
+          currentSection = { title: 'OVERVIEW', content: [line] };
         } else {
-          sections[sections.length - 1].content.push(trimmed);
+          sections[sections.length - 1].content.push(line);
         }
       }
     });
 
-    if (currentSection) sections.push(currentSection);
+    if (currentSection && currentSection.content.length > 0) {
+      sections.push(currentSection);
+    }
+
+    if (sections.length === 0) {
+      return (
+        <div className="formatted-analysis">
+          <div className="analysis-section">
+            <div className="section-content">
+              <p>{cleanedText}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="formatted-analysis">
