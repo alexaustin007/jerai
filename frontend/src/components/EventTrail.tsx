@@ -36,6 +36,90 @@ export default function EventTrail({ issueId, onBack }: Props) {
     return date.toLocaleString();
   }
 
+  function parseContent(rawContent: string): string {
+    try {
+      const parsed = JSON.parse(rawContent);
+      if (parsed.content && Array.isArray(parsed.content)) {
+        return parsed.content
+          .map((item: any) => item.text || '')
+          .join('\n\n')
+          .trim();
+      }
+      return rawContent;
+    } catch {
+      return rawContent;
+    }
+  }
+
+  function formatAnalysis(rawAnalysis: string) {
+    const cleanedText = parseContent(rawAnalysis);
+    const lines = cleanedText.split('\n').filter(line => line.trim());
+
+    const sections: { title: string; content: string[] }[] = [];
+    let currentSection: { title: string; content: string[] } | null = null;
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed.match(/^(ROOT CAUSE|LIKELY CAUSE|AFFECTED FILES|SUGGESTED APPROACH|FIX|SOLUTION):/i)) {
+        if (currentSection) sections.push(currentSection);
+        currentSection = { title: trimmed, content: [] };
+      } else if (currentSection) {
+        currentSection.content.push(trimmed);
+      } else {
+        if (!sections.length || sections[sections.length - 1].title !== 'Overview') {
+          sections.push({ title: 'Overview', content: [trimmed] });
+        } else {
+          sections[sections.length - 1].content.push(trimmed);
+        }
+      }
+    });
+
+    if (currentSection) sections.push(currentSection);
+
+    return (
+      <div className="formatted-analysis">
+        {sections.map((section, idx) => (
+          <div key={idx} className="analysis-section">
+            <h4 className="section-title">{section.title}</h4>
+            <div className="section-content">
+              {section.content.map((text, i) => (
+                <p key={i}>{text}</p>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function formatPatch(rawPatch: string) {
+    const cleanedPatch = parseContent(rawPatch);
+    const lines = cleanedPatch.split('\n');
+
+    return (
+      <div className="formatted-patch">
+        {lines.map((line, idx) => {
+          let className = 'patch-line';
+          if (line.startsWith('---') || line.startsWith('+++')) {
+            className += ' patch-header';
+          } else if (line.startsWith('+') && !line.startsWith('+++')) {
+            className += ' patch-addition';
+          } else if (line.startsWith('-') && !line.startsWith('---')) {
+            className += ' patch-deletion';
+          } else if (line.startsWith('@@')) {
+            className += ' patch-meta';
+          }
+
+          return (
+            <div key={idx} className={className}>
+              <code>{line || '\u00A0'}</code>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   function renderEventDetails(event: Event) {
     switch (event.type) {
       case 'IssueCreated':
@@ -61,12 +145,22 @@ export default function EventTrail({ issueId, onBack }: Props) {
       case 'AnalysisComplete':
         return (
           <div className="event-details">
-            <p><strong>AI Analysis (Cerebras):</strong></p>
-            <pre className="analysis-text">{event.payload?.analysis}</pre>
-            <p><strong>Likely Cause:</strong> {event.payload?.likely_cause}</p>
-            <p><strong>Affected Files:</strong> {event.payload?.affected_files?.join(', ')}</p>
-            {event.payload?.mock && (
-              <span className="badge badge-warning">Mock Data</span>
+            <div className="detail-header">
+              <h3>AI Analysis (Cerebras)</h3>
+              {event.payload?.mock && (
+                <span className="badge badge-warning">Mock Data</span>
+              )}
+            </div>
+            {formatAnalysis(event.payload?.analysis || '')}
+            {event.payload?.affected_files && event.payload.affected_files.length > 0 && (
+              <div className="affected-files-section">
+                <h4>Affected Files:</h4>
+                <ul className="file-list">
+                  {event.payload.affected_files.map((file: string, idx: number) => (
+                    <li key={idx}><code>{file}</code></li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         );
@@ -74,21 +168,36 @@ export default function EventTrail({ issueId, onBack }: Props) {
       case 'PatchProposed':
         return (
           <div className="event-details">
-            <p><strong>Code Patch (Llama via MCP):</strong></p>
-            <pre className="patch-code">{event.payload?.patch}</pre>
-            <p><strong>Files Modified:</strong> {event.payload?.files_modified?.join(', ')}</p>
-            <p>
-              <strong>Tests:</strong>{' '}
-              <span className="badge badge-success">
-                {event.payload?.test_results?.passed?.length || 0} passed
-              </span>{' '}
-              <span className="badge badge-danger">
-                {event.payload?.test_results?.failed?.length || 0} failed
-              </span>
-            </p>
-            {event.payload?.mock && (
-              <span className="badge badge-warning">Mock Data</span>
-            )}
+            <div className="detail-header">
+              <h3>Code Patch (Llama via MCP)</h3>
+              {event.payload?.mock && (
+                <span className="badge badge-warning">Mock Data</span>
+              )}
+            </div>
+            {formatPatch(event.payload?.patch || '')}
+            <div className="patch-meta-info">
+              {event.payload?.files_modified && event.payload.files_modified.length > 0 && (
+                <div className="files-modified">
+                  <strong>Files Modified:</strong>
+                  <ul className="file-list">
+                    {event.payload.files_modified.map((file: string, idx: number) => (
+                      <li key={idx}><code>{file}</code></li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div className="test-results">
+                <strong>Test Results:</strong>
+                <div className="test-badges">
+                  <span className="badge badge-success">
+                    {event.payload?.test_results?.passed?.length || 0} PASSED
+                  </span>
+                  <span className="badge badge-danger">
+                    {event.payload?.test_results?.failed?.length || 0} FAILED
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         );
 

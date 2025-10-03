@@ -497,3 +497,169 @@ body {
   background: #f39c12;
   color: white;
 }
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e1e8ed;
+}
+
+.detail-header h3 {
+  font-size: 16px;
+  color: #2c3e50;
+  font-weight: 700;
+  margin: 0;
+}
+
+.formatted-analysis {
+  margin: 15px 0;
+}
+
+.analysis-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-content {
+  background: white;
+  padding: 12px 15px;
+  border-radius: 6px;
+  border-left: 3px solid #667eea;
+}
+
+.section-content p {
+  margin: 8px 0;
+  color: #2c3e50;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.formatted-patch {
+  background: #1e1e1e;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 15px 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.patch-line {
+  padding: 4px 12px;
+  line-height: 1.6;
+  border-left: 3px solid transparent;
+}
+
+.patch-line code {
+  color: #d4d4d4;
+  font-family: inherit;
+}
+
+.patch-header {
+  background: #2d2d30;
+  font-weight: bold;
+}
+
+.patch-header code {
+  color: #4ec9b0;
+}
+
+.patch-meta {
+  background: #2d2d30;
+}
+
+.patch-meta code {
+  color: #858585;
+  font-style: italic;
+}
+
+.patch-addition {
+  background: rgba(46, 160, 67, 0.2);
+  border-left-color: #2ea043;
+}
+
+.patch-addition code {
+  color: #3fb950;
+}
+
+.patch-deletion {
+  background: rgba(248, 81, 73, 0.2);
+  border-left-color: #f85149;
+}
+
+.patch-deletion code {
+  color: #f85149;
+}
+
+.affected-files-section,
+.files-modified {
+  margin-top: 15px;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+}
+
+.affected-files-section h4,
+.files-modified strong {
+  font-size: 13px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+
+.file-list li {
+  padding: 6px 10px;
+  background: #f7f9fa;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.file-list code {
+  color: #667eea;
+  font-weight: 600;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.patch-meta-info {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.test-results {
+  flex: 1;
+  min-width: 200px;
+}
+
+.test-results strong {
+  display: block;
+  font-size: 13px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.test-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
