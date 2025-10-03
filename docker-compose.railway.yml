@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
+      - CEREBRAS_API_URL=${CEREBRAS_API_URL}
+      - MCP_GATEWAY_URL=http://mcp_agent:9000
+      - WORKSPACE_PATH=/workspace
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY}
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mcp_agent
+    volumes:
+      - ./mcp_agent:/app/mcp_agent:ro
+      - ./backend:/workspace/backend:ro
+      - ./frontend:/workspace/frontend:ro
+      - ./ecommerce-app:/workspace/ecommerce-app:ro
+
+  mcp_agent:
+    build:
+      context: ./mcp_agent
+      dockerfile: Dockerfile
+    environment:
+      - WORKSPACE_PATH=/workspace
+      - CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
+      - CEREBRAS_API_URL=${CEREBRAS_API_URL}
+      - PORT=9000
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./backend:/workspace/backend:ro
+      - ./frontend:/workspace/frontend:ro
+      - ./ecommerce-app:/workspace/ecommerce-app:ro
