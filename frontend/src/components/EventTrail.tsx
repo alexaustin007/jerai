@@ -10,6 +10,7 @@ export default function EventTrail({ issueId, onBack }: Props) {
   const [events, setEvents] = useState<Event[]>([]);
   const [issue, setIssue] = useState<Issue | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copiedPatchId, setCopiedPatchId] = useState<number | null>(null);
 
   useEffect(() => {
     loadData();
@@ -34,6 +35,17 @@ export default function EventTrail({ issueId, onBack }: Props) {
   function formatTimestamp(ts: string) {
     const date = new Date(ts);
     return date.toLocaleString();
+  }
+
+  async function copyPatchToClipboard(eventId: number, patch: string) {
+    try {
+      const cleanedPatch = parseContent(patch);
+      await navigator.clipboard.writeText(cleanedPatch);
+      setCopiedPatchId(eventId);
+      setTimeout(() => setCopiedPatchId(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy patch:', error);
+    }
   }
 
   function parseContent(rawContent: string): string {
@@ -360,9 +372,27 @@ export default function EventTrail({ issueId, onBack }: Props) {
           <div className="event-details">
             <div className="detail-header">
               <h3>Code Patch (Llama via MCP)</h3>
-              {event.payload?.mock && (
-                <span className="badge badge-warning">Mock Data</span>
-              )}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {event.payload?.mock && (
+                  <span className="badge badge-warning">Mock Data</span>
+                )}
+                <button
+                  onClick={() => copyPatchToClipboard(event.id, event.payload?.patch || '')}
+                  className="btn-copy"
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    borderRadius: '4px',
+                    border: '1px solid #ccc',
+                    background: copiedPatchId === event.id ? '#4caf50' : '#fff',
+                    color: copiedPatchId === event.id ? '#fff' : '#333',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {copiedPatchId === event.id ? 'Copied!' : 'Copy Patch'}
+                </button>
+              </div>
             </div>
 
             <div className="patch-explanation">
