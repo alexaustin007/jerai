@@ -29,4 +29,4 @@ class Config:
     CEREBRAS_API_KEY = os.getenv('CEREBRAS_API_KEY')
     CEREBRAS_API_URL = os.getenv('CEREBRAS_API_URL', 'https://api.cerebras.ai/v1/chat/completions')
 
-    MCP_GATEWAY_URL = os.getenv('MCP_GATEWAY_URL', 'http://localhost:3000')
+    MCP_GATEWAY_URL = os.getenv('MCP_GATEWAY_URL', 'http://mcp-agent.railway.internal:9000')
