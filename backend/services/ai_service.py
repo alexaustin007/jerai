@@ -23,6 +23,9 @@ def analyze_bug_with_cerebras(title: str, description: str = "") -> dict:
         cerebras_key = Config.CEREBRAS_API_KEY
         cerebras_url = Config.CEREBRAS_API_URL
 
+        print(f"[DEBUG] Cerebras API Key exists: {bool(cerebras_key)}")
+        print(f"[DEBUG] Cerebras API URL: {cerebras_url}")
+
         if not cerebras_key:
             raise Exception("CEREBRAS_API_KEY not configured")
 
@@ -56,8 +59,10 @@ Provide a concise technical analysis."""
             timeout=10
         )
 
+        print(f"[DEBUG] Cerebras response status: {response.status_code}")
         response.raise_for_status()
         result = response.json()
+        print(f"[DEBUG] Cerebras response received successfully")
         analysis_text = result['choices'][0]['message']['content']
 
         # Extract affected files from analysis
@@ -95,7 +100,9 @@ Provide a concise technical analysis."""
         }
 
     except Exception as e:
-        print(f'Cerebras analysis failed: {e}')
+        import traceback
+        print(f'[ERROR] Cerebras analysis failed: {e}')
+        print(f'[ERROR] Traceback: {traceback.format_exc()}')
         return {
             'analysis': f'Mock analysis (Cerebras unavailable): Floating-point precision issue in cart.py. Use Decimal for money calculations.',
             'likely_cause': 'Floating point arithmetic',
