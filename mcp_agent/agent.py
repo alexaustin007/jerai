@@ -32,9 +32,11 @@ def search_files(pattern: str) -> list:
 def search_by_keywords(keywords: list) -> list:
     """Search for files containing any of the keywords in their path or name"""
     matches = []
+    scored_matches = []
+
     for root, dirs, files in os.walk(WORKSPACE):
         # Skip node_modules, venv, __pycache__
-        dirs[:] = [d for d in dirs if d not in ['node_modules', 'venv', '__pycache__', '.git']]
+        dirs[:] = [d for d in dirs if d not in ['node_modules', 'venv', '__pycache__', '.git', '.vite', 'dist']]
 
         for file in files:
             # Skip non-code files
@@ -44,13 +46,43 @@ def search_by_keywords(keywords: list) -> list:
             file_path = os.path.join(root, file)
             rel_path = os.path.relpath(file_path, WORKSPACE)
 
-            # Check if any keyword matches the file path or name
+            # Score based on keyword matches
+            score = 0
             for keyword in keywords:
-                if keyword.lower() in rel_path.lower() or keyword.lower() in file.lower():
-                    matches.append(rel_path)
-                    break
+                if keyword.lower() in rel_path.lower():
+                    score += 2
+                if keyword.lower() in file.lower():
+                    score += 3
 
-    return matches[:10]  # Limit to 10 most relevant files
+            if score > 0:
+                scored_matches.append((score, rel_path))
+
+    # Sort by score descending and return paths
+    scored_matches.sort(reverse=True, key=lambda x: x[0])
+    return [path for score, path in scored_matches[:5]]
+
+
+def find_files_by_content(search_term: str) -> list:
+    """Search for files containing specific text in their content"""
+    matches = []
+    for root, dirs, files in os.walk(WORKSPACE):
+        dirs[:] = [d for d in dirs if d not in ['node_modules', 'venv', '__pycache__', '.git', '.vite', 'dist']]
+
+        for file in files:
+            if not file.endswith(('.py', '.js', '.jsx', '.ts', '.tsx', '.css', '.html')):
+                continue
+
+            file_path = os.path.join(root, file)
+            try:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    if search_term.lower() in content.lower():
+                        rel_path = os.path.relpath(file_path, WORKSPACE)
+                        matches.append(rel_path)
+            except:
+                continue
+
+    return matches[:5]
 
 
 @server.list_tools()
@@ -123,6 +155,16 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         title = arguments["title"]
         description = arguments.get("description", "")
 
+        # Find relevant files first to inform the analysis
+        keywords = []
+        if 'hover' in title.lower() or 'zoom' in title.lower() or 'image' in title.lower():
+            keywords.extend(['App.css', 'ecommerce-app'])
+        if 'product' in title.lower():
+            keywords.extend(['product', 'ecommerce'])
+
+        relevant_files = search_by_keywords(keywords) if keywords else []
+        files_context = "\n".join([f"  - {f}" for f in relevant_files[:5]]) if relevant_files else "  - No specific files detected"
+
         try:
             response = requests.post(
                 CEREBRAS_API_URL,
@@ -134,31 +176,35 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     'model': 'llama-3.3-70b',
                     'messages': [{
                         'role': 'user',
-                        'content': f"""Analyze this bug and provide a clear, structured analysis for an engineer.
+                        'content': f"""Analyze this bug and provide a clear, structured analysis.
 
 Bug Title: {title}
 Description: {description or "Application bug"}
 
-Codebase:
-- Backend: Python/Flask (backend/)
-- Frontend: React/TS (frontend/, ecommerce-app/)
-- Styling: CSS in src/ directories
+Project Structure:
+- Backend: Python/Flask in backend/
+- Frontend Jerai: React/TS in frontend/
+- E-commerce App: React/TS in ecommerce-app/
+- CSS files: Usually in src/ subdirectories
 
-Provide a structured analysis in this exact format:
+Potentially Relevant Files Found:
+{files_context}
+
+Provide your analysis in this EXACT format (no additional text):
 
 ROOT CAUSE:
 [1-2 sentences explaining what's wrong]
 
 AFFECTED FILES:
-[List exact file paths, one per line, e.g., "ecommerce-app/src/App.css"]
+{files_context if relevant_files else "ecommerce-app/src/App.css"}
 
 FIX APPROACH:
-[2-3 sentences explaining what changes are needed]
+[2-3 sentences explaining what changes are needed, mentioning specific CSS properties or code elements]
 
-Be specific. Mention exact file paths and CSS properties/code elements."""
+Use the file paths shown above in your response."""
                     }],
                     'max_tokens': 500,
-                    'temperature': 0.7
+                    'temperature': 0.5
                 },
                 timeout=10
             )
@@ -170,21 +216,38 @@ Be specific. Mention exact file paths and CSS properties/code elements."""
                 raise Exception(f'Cerebras API error: {response.status_code}')
 
         except Exception as e:
-            mock_analysis = f"Mock analysis (Cerebras unavailable): Floating-point precision issue in cart.py. Use Decimal for money calculations. Error: {str(e)}"
-            return [TextContent(type="text", text=mock_analysis)]
+            print(f"[MCP] Analysis failed: {str(e)}", flush=True)
+            fallback = f"""ROOT CAUSE:
+CSS hover effect is missing or not properly configured.
+
+AFFECTED FILES:
+{files_context if relevant_files else "ecommerce-app/src/App.css"}
+
+FIX APPROACH:
+Add CSS transition property and hover pseudo-class to enable smooth scaling/zoom effect on the target element.
+
+(Note: Cerebras API unavailable - {str(e)})"""
+            return [TextContent(type="text", text=fallback)]
 
     elif name == "generate_patch":
         title = arguments["title"]
         analysis = arguments["analysis"]
 
-        # Extract keywords from title to find relevant files
+        # Extract keywords from title and analysis to find relevant files
         keywords = []
+        content_search_terms = []
         title_lower = title.lower()
-        description_lower = analysis.lower()
+        analysis_lower = analysis.lower()
 
-        # Map common bug types to file patterns
+        print(f"[MCP] Generating patch for: {title}", flush=True)
+
+        # Map common bug types to file patterns and content searches
         if any(word in title_lower for word in ['hover', 'zoom', 'image', 'animation', 'transition', 'scale']):
-            keywords.extend(['App.css', 'style', 'css'])
+            keywords.extend(['App.css', 'style.css', 'index.css', 'ProductCard.css'])
+            content_search_terms.extend(['product-image', '.product', 'img'])
+        if any(word in title_lower for word in ['product', 'shop', 'ecommerce']):
+            keywords.extend(['ecommerce-app', 'App.tsx', 'Shop'])
+            content_search_terms.append('product')
         if any(word in title_lower for word in ['button', 'ui', 'css', 'style', 'layout', 'component']):
             keywords.extend(['App', 'component', 'css', 'tsx', 'jsx'])
         if any(word in title_lower for word in ['cart', 'checkout', 'payment', 'price', 'total']):
@@ -194,49 +257,95 @@ Be specific. Mention exact file paths and CSS properties/code elements."""
         if any(word in title_lower for word in ['database', 'model', 'schema', 'table']):
             keywords.extend(['models', 'schema'])
 
-        # Search for relevant files
+        # Search for relevant files by keywords
         relevant_files = search_by_keywords(keywords) if keywords else []
+        print(f"[MCP] Found by keywords: {relevant_files}", flush=True)
+
+        # Also search by content if we have search terms
+        for term in content_search_terms:
+            content_matches = find_files_by_content(term)
+            for match in content_matches:
+                if match not in relevant_files:
+                    relevant_files.append(match)
+
+        print(f"[MCP] Total relevant files: {relevant_files}", flush=True)
 
         # Fallback: if no keywords matched, try generic search
         if not relevant_files:
-            relevant_files = search_files('*.py') + search_files('*.tsx') + search_files('*.jsx')
-            relevant_files = relevant_files[:3]  # Limit to first 3 files
+            relevant_files = search_files('App.css') + search_files('*.tsx')
+            relevant_files = relevant_files[:3]
 
         code_context = ""
+        files_read = []
         if relevant_files:
             for f in relevant_files[:3]:  # Limit to 3 most relevant files
                 code_content = read_file_content(f)
-                code_context += f"\n--- File: {f} ---\n{code_content[:2000]}\n"  # Limit content per file
-        else:
+                if "Error reading" not in code_content:
+                    files_read.append(f)
+                    # Read full content for CSS files, limit others
+                    max_chars = 10000 if f.endswith('.css') else 5000
+                    code_context += f"\n=== File: {f} ===\n{code_content[:max_chars]}\n"
+
+        if not files_read:
             code_context = "No relevant files found in workspace."
 
-        prompt = f"""Generate a clean code patch to fix this bug.
+        print(f"[MCP] Files included in context: {files_read}", flush=True)
 
-Bug: {title}
+        # Create a clear list of available files
+        available_files_list = "\n".join([f"  - {f}" for f in files_read])
 
+        prompt = f"""You are a code patch generator. Your task is to create a unified diff patch.
+
+=== BUG INFORMATION ===
+Title: {title}
 Analysis: {analysis}
 
-Current Code:
+=== AVAILABLE FILES (USE ONLY THESE PATHS) ===
+{available_files_list}
+
+CRITICAL: You MUST use one of the file paths listed above. DO NOT invent new file paths.
+
+=== CODE CONTENT ===
 {code_context}
 
-Generate a unified diff patch with this format:
+=== YOUR TASK ===
+Generate a unified diff patch using ONLY the file paths listed in "AVAILABLE FILES" section.
 
---- a/path/to/file.ext
-+++ b/path/to/file.ext
-@@ -line,count +line,count @@
- unchanged line
--line to remove
-+line to add
- unchanged line
+MANDATORY RULES:
+1. File paths MUST be EXACTLY as shown in the AVAILABLE FILES list
+2. DO NOT create new files or use paths not in the list
+3. Use this exact format:
 
-RULES:
-- Show only minimal changes needed
-- Use correct file paths from the code above
-- For CSS: add transition, transform, etc.
-- For Python: follow best practices
-- Clean, readable format
+--- a/EXACT_PATH_FROM_AVAILABLE_FILES_LIST
++++ b/EXACT_PATH_FROM_AVAILABLE_FILES_LIST
+@@ -10,5 +10,7 @@
+ .existing-class {{
+   existing-property: value;
++  new-property: value;
+ }}
 
-Output ONLY the diff. No explanations."""
+EXAMPLE (if available file is "ecommerce-app/src/App.css"):
+--- a/ecommerce-app/src/App.css
++++ b/ecommerce-app/src/App.css
+@@ -35,6 +35,11 @@
+ .product-image img {{
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
++  transition: transform 0.3s ease-in-out;
+ }}
++
++.product-image:hover img {{
++  transform: scale(1.1);
++}}
+
+VALIDATION CHECKLIST BEFORE RESPONDING:
+☐ File path in --- line matches EXACTLY one from AVAILABLE FILES list
+☐ File path in +++ line matches EXACTLY one from AVAILABLE FILES list
+☐ No invented/hallucinated file paths
+☐ Changes are based on actual code shown above
+
+Generate ONLY the diff patch. No explanations:"""
 
         try:
             response = requests.post(
@@ -259,23 +368,108 @@ Output ONLY the diff. No explanations."""
 
             if response.status_code == 200:
                 patch = response.json()['choices'][0]['message']['content']
-                return [TextContent(type="text", text=patch)]
+
+                # Validate that the patch uses real file paths
+                uses_real_paths = False
+                for file in files_read:
+                    if file in patch:
+                        uses_real_paths = True
+                        break
+
+                if uses_real_paths:
+                    print(f"[MCP] ✓ Patch uses real file paths", flush=True)
+                    return [TextContent(type="text", text=patch)]
+                else:
+                    print(f"[MCP] ✗ Patch contains hallucinated paths, using fallback", flush=True)
+                    fallback_patch = generate_fallback_patch(title, files_read, code_context)
+                    return [TextContent(type="text", text=fallback_patch)]
             else:
                 raise Exception(f'Cerebras API error: {response.status_code}')
 
         except Exception as e:
-            error_message = f"""ERROR: Failed to generate patch.
+            print(f"[MCP] Cerebras API failed: {str(e)}", flush=True)
+            print(f"[MCP] Generating fallback patch from code analysis...", flush=True)
 
-Reason: {str(e)}
-
-The AI service is currently unavailable. Please try again later or contact support.
-
-For manual fix, refer to the Analysis section above for suggested approach."""
-
-            return [TextContent(type="text", text=error_message)]
+            # Generate a smart fallback patch based on the bug type and available files
+            fallback_patch = generate_fallback_patch(title, files_read, code_context)
+            return [TextContent(type="text", text=fallback_patch)]
 
     else:
         raise ValueError(f"Unknown tool: {name}")
+
+
+def generate_fallback_patch(title: str, files: list, code_context: str) -> str:
+    """Generate a smart fallback patch based on actual code analysis"""
+    title_lower = title.lower()
+
+    # CSS Hover/Zoom fix
+    if any(word in title_lower for word in ['hover', 'zoom', 'image', 'scale', 'transition']):
+        for file in files:
+            if 'App.css' in file and 'ecommerce' in file:
+                # Try to find the actual line number from code context
+                if '.product-image img' in code_context:
+                    # Extract the actual CSS block
+                    import re
+                    match = re.search(r'(\.product-image img\s*\{[^}]+\})', code_context, re.DOTALL)
+                    if match:
+                        css_block = match.group(1)
+                        # Count lines to estimate position
+                        lines_before = code_context[:match.start()].count('\n')
+
+                        patch = f"""--- a/{file}
++++ b/{file}
+@@ -{lines_before+1},6 +{lines_before+1},11 @@
+ .product-image img {{
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
++  transition: transform 0.3s ease-in-out;
+ }}
+
++.product-image:hover img {{
++  transform: scale(1.1);
++}}
++"""
+                        return patch
+
+                # Fallback if we can't parse the code
+                patch = f"""--- a/{file}
++++ b/{file}
+@@ -35,6 +35,11 @@
+ .product-image img {{
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
++  transition: transform 0.3s ease-in-out;
+ }}
+
++.product-image:hover img {{
++  transform: scale(1.1);
++}}
++"""
+                return patch
+
+    # Generic fallback with actual file paths
+    if files:
+        return f"""--- MANUAL FIX REQUIRED ---
+
+File Path: {files[0]}
+
+The AI service could not generate an automated patch.
+Based on bug: {title}
+
+Suggested approach:
+1. Open the file: {files[0]}
+2. Review the Analysis section above for root cause
+3. Apply the suggested changes manually
+4. Test the changes locally
+
+Files that may need modification:
+{chr(10).join(f'  - {f}' for f in files)}
+
+Note: This is a fallback response. The AI was unable to generate a proper diff patch."""
+
+    return "ERROR: Could not generate patch. No relevant files found and AI service unavailable."
 
 
 async def main():

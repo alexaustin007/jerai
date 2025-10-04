@@ -545,26 +545,157 @@ body {
   font-size: 14px;
 }
 
-.formatted-patch {
-  background: #1e1e1e;
+.patch-explanation {
+  background: #e8f4fd;
+  border-left: 4px solid #2196F3;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 6px;
+}
+
+.patch-explanation h4 {
+  font-size: 14px;
+  color: #1976D2;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+}
+
+.patch-explanation p {
+  margin: 0;
+  color: #2c3e50;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.patch-files-container {
+  margin: 15px 0;
+}
+
+.patch-file-section {
+  margin-bottom: 20px;
+  border: 1px solid #e1e8ed;
   border-radius: 8px;
   overflow: hidden;
-  margin: 15px 0;
+}
+
+.patch-file-header {
+  background: #f7f9fa;
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #e1e8ed;
+}
+
+.patch-file-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.file-icon {
+  font-size: 16px;
+}
+
+.patch-file-name code {
+  color: #2c3e50;
+  font-size: 13px;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.patch-file-stats {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.stat-addition {
+  color: #2ea043;
+  background: rgba(46, 160, 67, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.stat-deletion {
+  color: #f85149;
+  background: rgba(248, 81, 73, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.formatted-patch {
+  background: #1e1e1e;
+  border-radius: 0;
+  overflow: hidden;
+  margin: 0;
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
-  max-height: 600px;
+  max-height: 500px;
   overflow-y: auto;
 }
 
-.patch-line {
-  padding: 4px 12px;
-  line-height: 1.6;
-  border-left: 3px solid transparent;
+.formatted-patch::-webkit-scrollbar {
+  width: 10px;
 }
 
-.patch-line code {
+.formatted-patch::-webkit-scrollbar-track {
+  background: #2d2d30;
+}
+
+.formatted-patch::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 5px;
+}
+
+.formatted-patch::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+.patch-line {
+  display: flex;
+  line-height: 1.6;
+  border-left: 3px solid transparent;
+  transition: background-color 0.1s ease;
+}
+
+.patch-line:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.line-numbers {
+  display: flex;
+  flex-shrink: 0;
+  user-select: none;
+  background: #252526;
+  border-right: 1px solid #3e3e42;
+}
+
+.old-line-num,
+.new-line-num {
+  width: 50px;
+  padding: 4px 8px;
+  text-align: right;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: #858585;
+}
+
+.old-line-num {
+  border-right: 1px solid #3e3e42;
+}
+
+.patch-line code,
+.line-content {
   color: #d4d4d4;
   font-family: inherit;
+  padding: 4px 12px;
+  flex: 1;
+  overflow-x: auto;
 }
 
 .patch-header {
@@ -572,35 +703,65 @@ body {
   font-weight: bold;
 }
 
-.patch-header code {
+.patch-header .line-content {
   color: #4ec9b0;
+}
+
+.patch-header .line-numbers {
+  background: #2d2d30;
 }
 
 .patch-meta {
   background: #2d2d30;
 }
 
-.patch-meta code {
-  color: #858585;
+.patch-meta .line-content {
+  color: #569cd6;
   font-style: italic;
+  font-weight: 600;
+}
+
+.patch-meta .line-numbers {
+  background: #2d2d30;
 }
 
 .patch-addition {
-  background: rgba(46, 160, 67, 0.2);
+  background: rgba(46, 160, 67, 0.15);
   border-left-color: #2ea043;
 }
 
-.patch-addition code {
+.patch-addition .line-content {
   color: #3fb950;
 }
 
+.patch-addition .new-line-num {
+  background: rgba(46, 160, 67, 0.2);
+  color: #3fb950;
+  font-weight: 600;
+}
+
 .patch-deletion {
-  background: rgba(248, 81, 73, 0.2);
+  background: rgba(248, 81, 73, 0.15);
   border-left-color: #f85149;
 }
 
-.patch-deletion code {
+.patch-deletion .line-content {
   color: #f85149;
+}
+
+.patch-deletion .old-line-num {
+  background: rgba(248, 81, 73, 0.2);
+  color: #f85149;
+  font-weight: 600;
+}
+
+.patch-line:not(.patch-addition):not(.patch-deletion):not(.patch-header):not(.patch-meta) .line-numbers {
+  background: #1e1e1e;
+}
+
+.patch-line:not(.patch-addition):not(.patch-deletion):not(.patch-header):not(.patch-meta) .old-line-num,
+.patch-line:not(.patch-addition):not(.patch-deletion):not(.patch-header):not(.patch-meta) .new-line-num {
+  color: #6e7681;
 }
 
 .affected-files-section,
@@ -662,4 +823,17 @@ body {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.test-list {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f7f9fa;
+  border-radius: 4px;
+}
+
+.test-list small {
+  color: #657786;
+  font-size: 12px;
+  line-height: 1.4;
 }

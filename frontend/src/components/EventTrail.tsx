@@ -136,28 +136,178 @@ export default function EventTrail({ issueId, onBack }: Props) {
     const cleanedPatch = parseContent(rawPatch);
     const lines = cleanedPatch.split('\n');
 
-    return (
-      <div className="formatted-patch">
-        {lines.map((line, idx) => {
-          let className = 'patch-line';
-          if (line.startsWith('---') || line.startsWith('+++')) {
-            className += ' patch-header';
-          } else if (line.startsWith('+') && !line.startsWith('+++')) {
-            className += ' patch-addition';
-          } else if (line.startsWith('-') && !line.startsWith('---')) {
-            className += ' patch-deletion';
-          } else if (line.startsWith('@@')) {
-            className += ' patch-meta';
-          }
+    interface PatchLine {
+      content: string;
+      oldLineNum: number | null;
+      newLineNum: number | null;
+      type: 'header' | 'meta' | 'addition' | 'deletion' | 'context';
+    }
 
-          return (
-            <div key={idx} className={className}>
-              <code>{line || '\u00A0'}</code>
+    interface FileChange {
+      filename: string;
+      oldFile: string;
+      newFile: string;
+      lines: PatchLine[];
+      additions: number;
+      deletions: number;
+    }
+
+    const files: FileChange[] = [];
+    let currentFile: FileChange | null = null;
+    let oldLineNum = 0;
+    let newLineNum = 0;
+
+    lines.forEach(line => {
+      if (line.startsWith('---')) {
+        if (currentFile) files.push(currentFile);
+        const filename = line.replace(/^---\s+[ab]\//, '').trim();
+        currentFile = {
+          filename,
+          oldFile: line,
+          newFile: '',
+          lines: [{ content: line, oldLineNum: null, newLineNum: null, type: 'header' }],
+          additions: 0,
+          deletions: 0
+        };
+        oldLineNum = 0;
+        newLineNum = 0;
+      } else if (line.startsWith('+++') && currentFile) {
+        currentFile.newFile = line;
+        currentFile.lines.push({ content: line, oldLineNum: null, newLineNum: null, type: 'header' });
+      } else if (line.startsWith('@@') && currentFile) {
+        const match = line.match(/@@ -(\d+),?\d* \+(\d+),?\d* @@/);
+        if (match) {
+          oldLineNum = parseInt(match[1], 10);
+          newLineNum = parseInt(match[2], 10);
+        }
+        currentFile.lines.push({ content: line, oldLineNum: null, newLineNum: null, type: 'meta' });
+      } else if (currentFile) {
+        if (line.startsWith('+') && !line.startsWith('+++')) {
+          currentFile.lines.push({
+            content: line,
+            oldLineNum: null,
+            newLineNum: newLineNum,
+            type: 'addition'
+          });
+          newLineNum++;
+          currentFile.additions++;
+        } else if (line.startsWith('-') && !line.startsWith('---')) {
+          currentFile.lines.push({
+            content: line,
+            oldLineNum: oldLineNum,
+            newLineNum: null,
+            type: 'deletion'
+          });
+          oldLineNum++;
+          currentFile.deletions++;
+        } else {
+          currentFile.lines.push({
+            content: line,
+            oldLineNum: oldLineNum,
+            newLineNum: newLineNum,
+            type: 'context'
+          });
+          oldLineNum++;
+          newLineNum++;
+        }
+      }
+    });
+
+    if (currentFile) files.push(currentFile);
+
+    if (files.length === 0) {
+      return (
+        <div className="formatted-patch">
+          {lines.map((line, idx) => {
+            let className = 'patch-line';
+            if (line.startsWith('---') || line.startsWith('+++')) {
+              className += ' patch-header';
+            } else if (line.startsWith('+') && !line.startsWith('+++')) {
+              className += ' patch-addition';
+            } else if (line.startsWith('-') && !line.startsWith('---')) {
+              className += ' patch-deletion';
+            } else if (line.startsWith('@@')) {
+              className += ' patch-meta';
+            }
+
+            return (
+              <div key={idx} className={className}>
+                <code>{line || '\u00A0'}</code>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    return (
+      <div className="patch-files-container">
+        {files.map((file, fileIdx) => (
+          <div key={fileIdx} className="patch-file-section">
+            <div className="patch-file-header">
+              <div className="patch-file-name">
+                <span className="file-icon">📄</span>
+                <code>{file.filename}</code>
+              </div>
+              <div className="patch-file-stats">
+                {file.additions > 0 && (
+                  <span className="stat-addition">+{file.additions}</span>
+                )}
+                {file.deletions > 0 && (
+                  <span className="stat-deletion">-{file.deletions}</span>
+                )}
+              </div>
             </div>
-          );
-        })}
+            <div className="formatted-patch">
+              {file.lines.map((patchLine, idx) => {
+                let className = 'patch-line';
+                if (patchLine.type === 'header') {
+                  className += ' patch-header';
+                } else if (patchLine.type === 'meta') {
+                  className += ' patch-meta';
+                } else if (patchLine.type === 'addition') {
+                  className += ' patch-addition';
+                } else if (patchLine.type === 'deletion') {
+                  className += ' patch-deletion';
+                }
+
+                return (
+                  <div key={idx} className={className}>
+                    <span className="line-numbers">
+                      <span className="old-line-num">
+                        {patchLine.oldLineNum !== null ? patchLine.oldLineNum : ''}
+                      </span>
+                      <span className="new-line-num">
+                        {patchLine.newLineNum !== null ? patchLine.newLineNum : ''}
+                      </span>
+                    </span>
+                    <code className="line-content">{patchLine.content || '\u00A0'}</code>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     );
+  }
+
+  function generatePatchExplanation(patch: string, filesModified: string[]): string {
+    const cleanedPatch = parseContent(patch);
+
+    if (cleanedPatch.includes('Decimal') || cleanedPatch.includes('decimal')) {
+      return 'This patch fixes floating-point precision errors by replacing float calculations with Python\'s Decimal type, ensuring accurate monetary calculations with proper rounding.';
+    }
+
+    if (cleanedPatch.includes('error') || cleanedPatch.includes('Error')) {
+      return 'This patch adds proper error handling mechanisms to prevent crashes and provide user-friendly error messages.';
+    }
+
+    if (cleanedPatch.includes('import')) {
+      return `This patch modifies imports and updates ${filesModified.length} file(s) to fix the identified issue.`;
+    }
+
+    return `This patch modifies ${filesModified.length} file(s) to resolve the bug by updating the affected code sections.`;
   }
 
   function renderEventDetails(event: Event) {
@@ -214,18 +364,15 @@ export default function EventTrail({ issueId, onBack }: Props) {
                 <span className="badge badge-warning">Mock Data</span>
               )}
             </div>
+
+            <div className="patch-explanation">
+              <h4>How This Fix Works:</h4>
+              <p>{generatePatchExplanation(event.payload?.patch || '', event.payload?.files_modified || [])}</p>
+            </div>
+
             {formatPatch(event.payload?.patch || '')}
+
             <div className="patch-meta-info">
-              {event.payload?.files_modified && event.payload.files_modified.length > 0 && (
-                <div className="files-modified">
-                  <strong>Files Modified:</strong>
-                  <ul className="file-list">
-                    {event.payload.files_modified.map((file: string, idx: number) => (
-                      <li key={idx}><code>{file}</code></li>
-                    ))}
-                  </ul>
-                </div>
-              )}
               <div className="test-results">
                 <strong>Test Results:</strong>
                 <div className="test-badges">
@@ -236,6 +383,16 @@ export default function EventTrail({ issueId, onBack }: Props) {
                     {event.payload?.test_results?.failed?.length || 0} FAILED
                   </span>
                 </div>
+                {event.payload?.test_results?.passed && event.payload.test_results.passed.length > 0 && (
+                  <div className="test-list">
+                    <small>Passed: {event.payload.test_results.passed.join(', ')}</small>
+                  </div>
+                )}
+                {event.payload?.test_results?.failed && event.payload.test_results.failed.length > 0 && (
+                  <div className="test-list">
+                    <small>Failed: {event.payload.test_results.failed.join(', ')}</small>
+                  </div>
+                )}
               </div>
             </div>
           </div>
