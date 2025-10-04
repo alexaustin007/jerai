@@ -1,6 +1,9 @@
 // API client for backend communication
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE ||
+  (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('jerai.vercel.app')
+    ? 'https://backend-production-f113.up.railway.app'
+    : 'http://localhost:8000');
 
 export interface Issue {
   id: number;
