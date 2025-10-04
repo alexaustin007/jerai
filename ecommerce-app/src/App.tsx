@@ -24,7 +24,9 @@ interface CartTotal {
   items_count: number;
 }
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : 'https://backend-production-f113.up.railway.app';
 
 export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
