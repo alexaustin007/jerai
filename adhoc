@@ -1,0 +1,41 @@
+⏺ Perfect! You've clarified the internal workflow - this is much clearer now. Let me update the understanding:
+
+  ✅ Corrected Workflow (Internal Team Only)
+
+  ClothingCo e-commerce (http://localhost:5174/) = External production app with bug
+  - End users shop, checkout, see wrong totals
+  - They DON'T create tickets
+  - They might complain via support/email
+
+  Jerai Bug Tracker (http://localhost:5173/) = Internal tool for engineering team
+  - Internal engineers monitor issues, user complaints, logs
+  - Internal engineer creates ticket: "Cart total wrong, $107.76 instead of $107.77"
+  - Internal engineer clicks "Activate" → moves to ACTIVE
+  - Internal engineer clicks "AI Fix" → triggers automated pipeline
+  - System auto-transitions RESOLVED → CLOSED if tests pass
+  - Internal engineer reviews Events tab to see patch, apply it
+
+  Architecture Flow:
+
+  1. Internal Engineer creates ticket in Jerai
+     ↓
+  2. Internal Engineer clicks "Activate" (NEW → ACTIVE)
+     ↓
+  3. Internal Engineer clicks "AI Fix"
+     ↓
+  4. Backend Pipeline:
+     - Cerebras API: Fast bug analysis (what's wrong, likely cause)
+     - MCP Agent: Read buggy code from backend/ecommerce/cart.py
+     - Llama 3.3 70B: Generate patch (float → Decimal)
+     - Run tests: pytest backend/tests/test_cart.py
+     - Log events: analysis, patch diff, test results
+     ↓
+  5. Auto-transition:
+     - Tests pass → ACTIVE → RESOLVED → CLOSED
+     - Tests fail → stay in ACTIVE with error events
+     ↓
+  6. Internal Engineer reviews:
+     - Events tab shows: analysis, patch, test logs
+     - Download/apply patch manually
+
+  Should I proceed building the backend with this corrected understanding?

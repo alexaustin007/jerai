@@ -9,6 +9,8 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db/init:/docker-entrypoint-initdb.d
@@ -23,10 +25,15 @@ services:
       dockerfile: Dockerfile
     container_name: jerai-backend
     environment:
-      DATABASE_URL: mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}?charset=utf8mb4&ssl_disabled=true
       CEREBRAS_API_KEY: ${CEREBRAS_API_KEY}
       CEREBRAS_API_URL: ${CEREBRAS_API_URL}
-      MCP_GATEWAY_URL: http://mcp_agent:9000
+      MCP_GATEWAY_URL: http://mcp-gateway:3000
       MCP_SERVER_SCRIPT: /app/mcp_agent/agent.py
       WORKSPACE_PATH: /workspace
       FLASK_ENV: ${FLASK_ENV}
@@ -36,7 +43,7 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      mcp_agent:
+      mcp-gateway:
         condition: service_started
     volumes:
       - ./backend:/app
@@ -76,6 +83,18 @@ services:
       - ./backend:/workspace/backend:ro
       - ./frontend:/workspace/frontend:ro
       - ./ecommerce-app:/workspace/ecommerce-app:ro
+
+  mcp-gateway:
+    build:
+      context: ./mcp_gateway
+      dockerfile: Dockerfile
+    container_name: jerai-mcp-gateway
+    environment:
+      MCP_AGENT_URL: http://mcp_agent:9000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mcp_agent
 
 volumes:
   mysql_data:
