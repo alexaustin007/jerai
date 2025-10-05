@@ -59,39 +59,61 @@ Then you can:
 
 ## Getting Started
 
-You need:
+### Try the Hosted Version
+
+The easiest way to try Jerai is to use our hosted version:
+
+1. **Main Issue Tracker**: https://jerai.vercel.app/
+2. **Demo Shopping App**: https://jerai-creb.vercel.app/
+
+No setup required - just click and explore!
+
+### Run Locally (Optional)
+
+If you want to run Jerai on your own machine:
+
+**Prerequisites:**
 - Docker installed on your computer
 - A Cerebras API key (free from https://cerebras.ai)
 
-Then run:
+**Steps:**
 
 ```bash
-# 1. Clone the project
+# 1. Clone the repository
 git clone https://github.com/yourusername/jerai.git
 cd jerai
-# 2. Start everything
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env and add your CEREBRAS_API_KEY
+
+# 3. Start all services
 docker compose up --build
 
+# 4. Access the application
+# Frontend: http://localhost:5173
+# Backend API: http://localhost:8000
+```
 
 ## What's inside?
 
-**Frontend** - A simple board view where you can:
+Frontend - A simple board view where you can:
 - See all your bugs in columns (New, Active, Resolved, Closed)
 - Click "AI Fix" on any active bug
 - View the complete history of what the AI did
 
-**Backend** - A Python Flask server that:
+Backend - A Python Flask server that:
 - Manages your issues and their states
 - Calls Cerebras for fast analysis
 - Routes requests to the Docker MCP Gateway
 - Stores everything in a MySQL database
 
-**Shopping Demo** - A React app that:
+Shopping Demo - A React app that:
 - Shows a clothing store with real products
 - Has a working shopping cart
 - Contains the intentional bug for demonstration
 
-**MCP Agent** - A containerized AI that:
+MCP Agent - A containerized AI that:
 - Reads your code files safely
 - Generates fixes using Llama
 - Runs tests to validate the fix
@@ -99,60 +121,45 @@ docker compose up --build
 
 ## The workflow explained
 
-**When you click "AI Fix":**
+When you click "AI Fix":
 
-1. **Cerebras analyzes the bug** (~1-2 second)
+1. Cerebras analyzes the bug (~1-2 second)
    - Reads your bug description
    - Figures out what type of problem it is
    - Suggests which files to check
 
-2. **Docker MCP Gateway activates** (~2-5 seconds)
+2. Docker MCP Gateway activates (~2-5 seconds)
    - Spins up a safe container
    - Gives the AI read-only access to your code
    - Sends the analysis to Llama
 
-3. **Llama generates a patch** (~5-10 seconds)
+3. Llama generates a patch (~5-10 seconds)
    - Reads the relevant source files
    - Understands the bug pattern
    - Writes corrected code
    - Creates a proper code diff
 
-4. **Tests run automatically** (~2 seconds)
+4. Tests run automatically (~2 seconds)
    - Validates the fix against your test suite
    - Makes sure nothing else broke
    - Reports success or failure
 
-5. **Issue auto-resolves** (instant)
+5. Issue auto-resolves (instant)
    - If tests pass, moves to "Resolved"
    - Shows you the complete patch
    - Logs everything in the event history
 
 ## Why these three technologies?
 
-**Cerebras** gives us incredible speed. Most AI APIs take 3-5 seconds just to think. Cerebras does it in under 1 second, which makes the whole experience feel instant.
+Cerebras gives us incredible speed. Most AI APIs take 3-5 seconds just to think. Cerebras does it in under 1 second, which makes the whole experience feel instant.
 
-**Llama 3.3 70B** is open-source and really good at understanding code. It can spot patterns, understand context across multiple files, and generate fixes that actually make sense.
+Llama 3.3 70B is open-source and really good at understanding code. It can spot patterns, understand context across multiple files, and generate fixes that actually make sense.
 
-**Docker MCP Gateway** solves the safety problem. We can't just let an AI modify files directly. The gateway gives us a secure way to let the AI read code and propose changes without any risk.
+Docker MCP Gateway solves the safety problem. We can't just let an AI modify files directly. The gateway gives us a secure way to let the AI read code and propose changes without any risk.
 
 Together, they create a fast, smart, and safe bug-fixing system.
 
-## Project structure
-
-```
-jerai/
-├── frontend/           # React app - the bug tracker UI
-├── ecommerce-app/      # React app - the shopping demo
-├── backend/            # Flask API - handles everything
-│   ├── ecommerce/      # Shopping cart code (with the bug)
-│   ├── services/       # AI integration code
-│   └── tests/          # Tests that expose the bug
-├── mcp_agent/          # The containerized AI agent
-└── db/                 # Database setup and demo data
-```
-
-
-## How Jerai Works as Your AI-Powered Issue Tracker and Solver
+## How Jerai Works as Your AI-Powered Issue Tracker and Solver 
 
 Jerai isn't just a bug fixer - it's a complete issue tracking system like Jira, but with an AI layer that can actually help resolve issues instead of just organizing them.
 
@@ -160,19 +167,19 @@ Jerai isn't just a bug fixer - it's a complete issue tracking system like Jira, 
 
 Just like Jira, Jerai handles different types of work:
 
-**Bugs** - Things that are broken and need fixing
+Bugs - Things that are broken and need fixing
 - Production errors that customers report
 - Failed test cases in your CI/CD pipeline
 - Performance issues or memory leaks
 - Security vulnerabilities found in scans
 
-**Tasks** - Work that needs to be done
+Tasks - Work that needs to be done
 - Refactoring messy code
 - Adding input validation to existing functions
 - Updating deprecated API calls
 - Converting code to use new libraries
 
-**Stories** - New features to implement
+Stories - New features to implement
 - Adding new API endpoints
 - Implementing business logic
 - Creating utility functions
@@ -183,9 +190,9 @@ Just like Jira, Jerai handles different types of work:
 Here's where Jerai's AI layer actually saves you time:
 
 #### 1. The "Junior Developer Bug" Scenario
-**Problem**: Your QA team finds a null pointer exception in the checkout flow. Usually, a junior developer would spend 2 hours tracing through logs, finding the file, and writing the fix.
+Problem: Your QA team finds a null pointer exception in the checkout flow. Usually, a junior developer would spend 2 hours tracing through logs, finding the file, and writing the fix.
 
-**With Jerai**:
+With Jerai:
 - Create the bug with stack trace
 - Click "AI Fix"
 - AI finds the file, sees the missing null check, adds proper validation
@@ -193,7 +200,7 @@ Here's where Jerai's AI layer actually saves you time:
 
 ### What Makes This Different from Regular Jira
 
-**Traditional Jira**:
+Traditional Jira:
 1. Developer reads bug description
 2. Developer searches codebase manually
 3. Developer figures out the fix
@@ -203,7 +210,7 @@ Here's where Jerai's AI layer actually saves you time:
 7. Code review happens
 8. Merge and deploy
 
-**Jerai with AI**:
+Jerai with AI:
 1. Developer reads bug description (or AI reads it for them)
 2. AI searches codebase automatically
 3. AI figures out the fix
@@ -216,10 +223,4 @@ Here's where Jerai's AI layer actually saves you time:
 ### The Bottom Line
 
 Jerai won't replace your developers but will boost productivity. What it does is handle the mechanical parts of debugging - the searching, pattern matching, and code generation, so your team can focus on the parts that need human creativity, judgment, and problem-solving.
-
-## License
-
-MIT License - Feel free to use and modify
-
----
 
