@@ -76,3 +76,12 @@ export async function getEvents(issueId: number): Promise<Event[]> {
   if (!response.ok) throw new Error('Failed to fetch events');
   return response.json();
 }
+
+// Delete issue
+export async function deleteIssue(issueId: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/api/issues/${issueId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!response.ok) throw new Error('Failed to delete issue');
+}

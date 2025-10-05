@@ -44,9 +44,9 @@ export default function Board() {
 
   const columns = [
     { state: 'New', color: '#95a5a6', icon: 'NEW' },
-    { state: 'Active', color: '#f39c12', icon: 'ACTIVE' },
-    { state: 'Resolved', color: '#27ae60', icon: 'DONE' },
-    { state: 'Closed', color: '#34495e', icon: 'CLOSED' }
+    { state: 'Active', color: '#1966e3', icon: 'ACTIVE' },
+    { state: 'Resolved', color: '#f39c12', icon: 'DONE' },
+    { state: 'Closed', color: '#48bd00', icon: 'CLOSED' }
   ];
 
   // Show event trail if an issue is selected
@@ -71,13 +71,23 @@ export default function Board() {
   return (
     <div className="board-container">
       <div className="board-header">
-        <h1>Jerai - AI Bug Tracker</h1>
-        <button
-          className="btn-create"
-          onClick={() => setShowCreateForm(!showCreateForm)}
-        >
-          + Create Issue
-        </button>
+        <h1>Jerai - AI that solves your backlog, not just bugs</h1>
+        <div className="header-links">
+          <a 
+            href="https://jerai-creb.vercel.app/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="ecommerce-link"
+          >
+            🛒 Buggy E-commerce Website
+          </a>
+          <button
+            className="btn-create"
+            onClick={() => setShowCreateForm(!showCreateForm)}
+          >
+            + Create Issue
+          </button>
+        </div>
       </div>
 
       {showCreateForm && (

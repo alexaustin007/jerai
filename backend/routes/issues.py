@@ -50,6 +50,21 @@ def create_issue():
     return jsonify(issue.to_dict()), 201
 
 
+@issues_bp.route('/<int:issue_id>', methods=['DELETE'])
+def delete_issue(issue_id):
+    """Delete an issue"""
+    issue = Issue.query.get_or_404(issue_id)
+    
+    # Delete associated events first
+    Event.query.filter_by(issue_id=issue_id).delete()
+    
+    # Delete the issue
+    db.session.delete(issue)
+    db.session.commit()
+    
+    return jsonify({'message': 'Issue deleted successfully'}), 200
+
+
 @issues_bp.route('/<int:issue_id>/events', methods=['GET'])
 def get_issue_events(issue_id):
     """Get all events for an issue"""
@@ -74,7 +89,7 @@ def transition_issue(issue_id):
         'New': ['Active'],
         'Active': ['Resolved'],
         'Resolved': ['Closed'],
-        'Closed': [],
+        'Closed': ['Active'],
         'Removed': []
     }
 

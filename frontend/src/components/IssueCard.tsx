@@ -1,7 +1,7 @@
 // Issue card component with action buttons
 
 import { useState } from 'react';
-import { transition, aiFix, type Issue } from '../api/issues';
+import { transition, aiFix, deleteIssue, type Issue } from '../api/issues';
 
 interface Props {
   issue: Issue;
@@ -38,6 +38,43 @@ export default function IssueCard({ issue, onUpdate, onShowEvents }: Props) {
     }
   }
 
+  async function handleClose() {
+    try {
+      setError(null);
+      await transition(issue.id, 'Closed');
+      onUpdate();
+    } catch (err) {
+      setError('Failed to close issue');
+      console.error(err);
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm('Are you sure you want to delete this issue?')) {
+      return;
+    }
+    
+    try {
+      setError(null);
+      await deleteIssue(issue.id);
+      onUpdate();
+    } catch (err) {
+      setError('Failed to delete issue');
+      console.error(err);
+    }
+  }
+
+  async function handleReopen() {
+    try {
+      setError(null);
+      await transition(issue.id, 'Active');
+      onUpdate();
+    } catch (err) {
+      setError('Failed to reopen issue');
+      console.error(err);
+    }
+  }
+
   // Get type badge color
   const typeColor = {
     BUG: '#e74c3c',
@@ -62,9 +99,14 @@ export default function IssueCard({ issue, onUpdate, onShowEvents }: Props) {
 
       <div className="issue-actions">
         {issue.state === 'New' && (
-          <button onClick={handleActivate} className="btn-primary">
-            Activate
-          </button>
+          <>
+            <button onClick={handleActivate} className="btn-primary">
+              Activate
+            </button>
+            <button onClick={handleDelete} className="btn-danger">
+              Delete
+            </button>
+          </>
         )}
 
         {issue.state === 'Active' && (
@@ -74,6 +116,18 @@ export default function IssueCard({ issue, onUpdate, onShowEvents }: Props) {
             className="btn-ai"
           >
             {loading ? 'Fixing...' : 'AI Fix'}
+          </button>
+        )}
+
+        {issue.state === 'Resolved' && (
+          <button onClick={handleClose} className="btn-success">
+            Close
+          </button>
+        )}
+
+        {issue.state === 'Closed' && (
+          <button onClick={handleReopen} className="btn-primary">
+            Reopen
           </button>
         )}
 

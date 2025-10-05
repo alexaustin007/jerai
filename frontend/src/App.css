@@ -66,6 +66,33 @@ body {
   text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
 }
 
+.header-links {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.ecommerce-link {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  text-decoration: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ecommerce-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+  background: linear-gradient(135deg, #ff5252 0%, #d63031 100%);
+}
+
 /* Create Issue Form */
 .create-form {
   background: white;
@@ -144,6 +171,38 @@ body {
 
 .btn-secondary:hover {
   background: #7f8c8d;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+.btn-success {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-success:hover {
+  background: #229954;
 }
 
 .btn-ai {
@@ -332,6 +391,16 @@ body {
   .board-header h1 {
     font-size: 1.5rem;
     text-align: center;
+  }
+
+  .header-links {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .ecommerce-link {
+    font-size: 13px;
+    padding: 10px 16px;
   }
 }
 /* Event Trail Styles */
