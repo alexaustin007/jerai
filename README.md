@@ -1,4 +1,4 @@
-# Jerai - AI that solves your backlog, not just bugs
+# Jerai - AI that solves your backlog, not just bugs (YT demo - https://youtu.be/cqmGcui5GW0)
 
 Jerai is an issue tracker and solver that automatically fixes bugs for you. Think of it like Jira, but with an AI assistant that can actually read your code, understand what's wrong, and write the fix.
 
